@@ -387,7 +387,7 @@ func TestControllerFetcher(t *testing.T) {
 				},
 			}},
 			expectedKey:   nil,
-			expectedError: fmt.Errorf("Unhandled targetRef v1 / Node / node, last error node is not a valid owner"),
+			expectedError: fmt.Errorf("Unhandled targetRef v1 / Node / node, last error: node is used as an owner and it is not a valid scale resource"),
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

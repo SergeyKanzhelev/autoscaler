@@ -216,7 +216,7 @@ func (f *controllerFetcher) getParentOfController(controllerKey ControllerKeyWit
 		return nil, nil
 	}
 	if err != nil {
-		return nil, fmt.Errorf("Unhandled targetRef %s / %s / %s, last error %v",
+		return nil, fmt.Errorf("Unhandled targetRef %s / %s / %s, last error: %v",
 			controllerKey.ApiVersion, controllerKey.Kind, controllerKey.Name, err)
 	}
 
@@ -286,10 +286,14 @@ func (f *controllerFetcher) isWellKnownOrScalable(key *ControllerKeyWithAPIVersi
 
 func (f *controllerFetcher) getOwnerForScaleResource(groupKind schema.GroupKind, namespace, name string) (*ControllerKeyWithAPIVersion, error) {
 	if wellKnownController(groupKind.Kind) == node {
-		// Some pods specify nods as their owners. This causes performance problems
+		// Some pods specify nods as their owners.
+		// This is set for static Pods, which is valid case,
+		// as well as for other cases, which are likely invalid.
+		// This causes performance problems
 		// in big clusters when VPA tries to get all nodes. We know nodes aren't
-		// valid controllers so we can skip trying to fetch them.
-		return nil, fmt.Errorf("node is not a valid owner")
+		// scalable for static Pods and not a valid controllers for non-static Pods
+		// so we can skip trying to fetch them.
+		return nil, fmt.Errorf("node is used as an owner and it is not a valid scale resource")
 	}
 	mappings, err := f.mapper.RESTMappings(groupKind)
 	if err != nil {
